@@ -1,27 +1,118 @@
 <!DOCTYPE html>
-<html>
+<html lang="vi">
 <head>
 <meta charset="UTF-8">
-<title>Thi thử</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Thi thử trắc nghiệm</title>
+
+<style>
+body{
+    font-family:Arial,sans-serif;
+    background:#f5f7fb;
+    margin:0;
+    padding:20px;
+}
+
+.container{
+    max-width:1000px;
+    margin:auto;
+}
+
+.card{
+    background:white;
+    padding:20px;
+    border-radius:12px;
+    box-shadow:0 2px 10px rgba(0,0,0,.1);
+    margin-bottom:20px;
+}
+
+h1{
+    text-align:center;
+    color:#0066cc;
+}
+
+button{
+    background:#0066cc;
+    color:white;
+    border:none;
+    padding:10px 16px;
+    border-radius:8px;
+    cursor:pointer;
+}
+
+button:hover{
+    background:#004c99;
+}
+
+.question{
+    margin-bottom:25px;
+    padding-bottom:15px;
+    border-bottom:1px solid #ddd;
+}
+
+.option{
+    display:block;
+    margin:8px 0;
+}
+
+.correct{
+    background:#d4edda;
+    padding:5px;
+    border-radius:5px;
+}
+
+.wrong{
+    background:#f8d7da;
+    padding:5px;
+    border-radius:5px;
+}
+
+#result{
+    font-size:22px;
+    font-weight:bold;
+    color:#006600;
+    margin-top:20px;
+}
+</style>
+
 </head>
 <body>
 
-<h1>Kiểm tra kết nối Google Sheet</h1>
+<div class="container">
 
-<button onclick="loadData()">Tải dữ liệu</button>
+<div class="card">
 
-<pre id="output"></pre>
+<h1>THI THỬ TRẮC NGHIỆM</h1>
+
+<label>Số câu:</label>
+
+<select id="questionCount">
+<option value="10">10</option>
+<option value="20">20</option>
+<option value="50" selected>50</option>
+<option value="100">100</option>
+</select>
+
+<button onclick="startExam()">Bắt đầu thi</button>
+
+</div>
+
+<div class="card">
+<div id="quiz"></div>
+
+<div style="margin-top:20px">
+<button id="submitBtn" onclick="submitExam()" style="display:none">
+Nộp bài
+</button>
+</div>
+
+<div id="result"></div>
+
+</div>
+
+</div>
 
 <script>
+
 const CSV_URL =
-"https://docs.google.com/spreadsheets/d/e/2PACX-1vQO2SebFEqdyhX6gjvWYBB0aUyrAfwsOOok70MN57RdqN7Lrs8j5ZQ5hsoTaOAOKCk4nAKFCm75nH4N/pub?gid=124083215&single=true&output=csv";
-
-async function loadData(){
-  const res = await fetch(CSV_URL);
-  const txt = await res.text();
-  document.getElementById("output").textContent = txt.substring(0,3000);
-}
-</script>
-
-</body>
-</html>
+"https://docs.google.com/spreadsheets/d/e/2PACX-1vQO2SebFEqdyhX6gjvWYBB0aUyrAfwsOOok70MN57RdqN7Lrs8j5ZQ5hsoTaOAOKCk4nAKFCm75nH4N/pub?gid=124083215&single=true&output
