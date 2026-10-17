@@ -2,59 +2,42 @@
 <html lang="vi">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Thi thử EVN</title>
 
 https://cdn.jsdelivr.net/npm/xlsx/dist/xlsx.full.min.jsscript>
 
-
 <style>
 body{
-font-family:Arial,sans-serif;
-background:#f4f4f4;
-margin:0;
-padding:20px;
+    font-family:Arial,sans-serif;
+    background:#f4f4f4;
+    padding:20px;
 }
 
 .container{
-max-width:900px;
-margin:auto;
-background:white;
-padding:20px;
-border-radius:12px;
-box-shadow:0 0 10px rgba(0,0,0,.15);
-}
-
-h1{
-text-align:center;
-color:#0066cc;
+    max-width:900px;
+    margin:auto;
+    background:white;
+    padding:20px;
+    border-radius:10px;
 }
 
 button{
-background:#0066cc;
-color:white;
-border:none;
-padding:10px 20px;
-border-radius:6px;
-cursor:pointer;
+    background:#0066cc;
+    color:white;
+    border:none;
+    padding:10px 20px;
+    border-radius:6px;
 }
 
 .question{
-border:1px solid #ddd;
-padding:10px;
-margin-top:10px;
-border-radius:5px;
-}
-
-.result{
-font-size:24px;
-font-weight:bold;
-color:green;
-margin-top:20px;
+    border:1px solid #ddd;
+    margin-top:10px;
+    padding:10px;
 }
 </style>
-</head>
 
+</head>
 <body>
 
 <div class="container">
@@ -83,25 +66,23 @@ Bắt đầu thi
 <script>
 
 let bank=[];
-let exam=[];
 
-document
-.getElementById("file")
-.addEventListener("change",loadExcel);
-
-function loadExcel(e){
+document.getElementById("file")
+.addEventListener("change",function(e){
 
 const file=e.target.files[0];
+
+if(!file)return;
 
 const reader=new FileReader();
 
 reader.onload=function(evt){
 
-const workbook=XLSX.read(
+const workbook=
+XLSX.read(
 evt.target.result,
-{
-type:"binary"
-});
+{type:"binary"}
+);
 
 const sheet=
 workbook.Sheets[
@@ -115,33 +96,27 @@ bank=[];
 
 rows.forEach(r=>{
 
-const q=
-r["Nội dung"];
-
-const answer=
-String(
-r["Đáp án"] || ""
-);
-
-if(!q)return;
+if(!r["Nội dung"]) return;
 
 let options=[];
 
 for(let i=1;i<=12;i++){
 
-const x=
+let x=
 r["Câu trả lời "+i];
 
-if(x){
-options.push(x);
-}
+if(x) options.push(x);
 
 }
 
 bank.push({
 
-question:q,
-answer:answer,
+question:r["Nội dung"],
+
+answer:String(
+r["Đáp án"]||""
+),
+
 options:options
 
 });
@@ -150,7 +125,9 @@ options:options
 
 alert(
 "Đã nạp "
-+bank.length+
++
+bank.length
++
 " câu hỏi"
 );
 
@@ -158,168 +135,25 @@ alert(
 
 reader.readAsBinaryString(file);
 
-}
-
-function shuffle(arr){
-
-for(
-let i=arr.length-1;
-i>0;
-i--
-){
-
-const j=
-Math.floor(
-Math.random()*
-(i+1)
-);
-
-[arr[i],arr[j]]
-=
-[arr[j],arr[i]];
-}
-
-return arr;
-}
+});
 
 function startExam(){
 
 if(bank.length===0){
 
-alert(
-"Vui lòng tải file Excel"
-);
+alert("Excel chưa nạp");
 
 return;
-}
-
-const count=
-parseInt(
-document
-.getElementById("count")
-.value
-);
-
-exam=
-shuffle(
-[...bank]
-)
-.slice(
-0,
-Math.min(
-count,
-bank.length
-)
-);
-
-let html="";
-
-exam.forEach((q,index)=>{
-
-html+=`
-<div class="question">
-
-<h3>
-Câu ${index+1}
-</h3>
-
-<p>${q.question}</p>
-
-`;
-
-q.options.forEach(
-(opt,i)=>{
-
-html+=`
-
-<label>
-
-<input
-type="radio"
-name="q${index}"
-value="${i+1}"
->
-
-${opt}
-
-</label>
-
-<br>
-
-`;
-
-});
-
-html+=`</div>`;
-
-});
-
-html+=`
-
-<br>
-
-<button
-onclick="submitExam()"
->
-Nộp bài
-</button>
-
-`;
-
-document
-.getElementById("exam")
-.innerHTML=
-html;
 
 }
 
-function submitExam(){
-
-let correct=0;
-
-exam.forEach(
-(q,index)=>{
-
-const selected=
-document.querySelector(
-'input[name="q'+index+'"]:checked'
-);
-
-if(!selected)return;
-
-if(
-selected.value===
-q.answer
-){
-correct++;
-}
-
-});
-
-const score=
-(
-correct/
-exam.length*
-10
-).toFixed(2);
-
-document
-.getElementById("exam")
-.innerHTML=`
-
-<div class="result">
-
-Điểm:
-${score}/10
-
-<br>
-
-Đúng:
-${correct}/${exam.length}
-
-</div>
-
-`;
+document.getElementById(
+"exam"
+).innerHTML=
+"<h2>Đã đọc được "
++
+bank.length+
+" câu hỏi</h2>";
 
 }
 
