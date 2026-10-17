@@ -1,218 +1,26 @@
 <!DOCTYPE html>
-<html lang="vi">
+<html>
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Thi Thử Trắc Nghiệm</title>
-
-<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
-
-<style>
-body{
-    font-family:Arial,sans-serif;
-    background:#f4f6f9;
-    margin:0;
-    padding:20px;
-}
-.container{
-    max-width:1100px;
-    margin:auto;
-    background:#fff;
-    padding:20px;
-    border-radius:10px;
-    box-shadow:0 0 10px rgba(0,0,0,.1);
-}
-h1{
-    text-align:center;
-    color:#0d6efd;
-}
-.section{
-    margin-bottom:20px;
-}
-button{
-    background:#0d6efd;
-    color:#fff;
-    border:none;
-    padding:10px 15px;
-    cursor:pointer;
-    border-radius:5px;
-}
-button:hover{
-    background:#0b5ed7;
-}
-.question{
-    border:1px solid #ddd;
-    padding:15px;
-    margin:15px 0;
-    border-radius:8px;
-}
-.correct{
-    color:green;
-    font-weight:bold;
-}
-.wrong{
-    color:red;
-    font-weight:bold;
-}
-.result{
-    font-size:22px;
-    font-weight:bold;
-    text-align:center;
-    margin-top:20px;
-}
-</style>
+<title>Thi thử</title>
 </head>
 <body>
 
-<div class="container">
+<h1>Kiểm tra kết nối Google Sheet</h1>
 
-<h1>HỆ THỐNG THI THỬ TRẮC NGHIỆM</h1>
+<button onclick="loadData()">Tải dữ liệu</button>
 
-<div class="section">
-    <input type="file" id="excelFile" accept=".xlsx,.xls">
-</div>
-
-<div class="section">
-    <label>Số câu thi:</label>
-    <input type="number" id="numQuestions" value="20" min="1">
-</div>
-
-<div class="section">
-    <button onclick="generateExam()">Tạo Đề</button>
-    <button onclick="submitExam()">Nộp Bài</button>
-</div>
-
-<div id="examArea"></div>
-
-<div class="result" id="result"></div>
-
-</div>
+<pre id="output"></pre>
 
 <script>
+const CSV_URL =
+"https://docs.google.com/spreadsheets/d/e/2PACX-1vQO2SebFEqdyhX6gjvWYBB0aUyrAfwsOOok70MN57RdqN7Lrs8j5ZQ5hsoTaOAOKCk4nAKFCm75nH4N/pub?gid=124083215&single=true&output=csv";
 
-let questionBank = [];
-let examQuestions = [];
-
-document.getElementById('excelFile').addEventListener('change', function(e){
-
-    const file = e.target.files[0];
-
-    const reader = new FileReader();
-
-    reader.onload = function(event){
-
-        const data = new Uint8Array(event.target.result);
-
-        const workbook = XLSX.read(data,{type:'array'});
-
-        const sheet = workbook.Sheets[workbook.SheetNames[0]];
-
-        questionBank = XLSX.utils.sheet_to_json(sheet);
-
-        alert("Đọc thành công " + questionBank.length + " câu hỏi");
-
-    };
-
-    reader.readAsArrayBuffer(file);
-
-});
-
-function shuffle(array){
-    return array.sort(()=>Math.random()-0.5);
+async function loadData(){
+  const res = await fetch(CSV_URL);
+  const txt = await res.text();
+  document.getElementById("output").textContent = txt.substring(0,3000);
 }
-
-function generateExam(){
-
-    if(questionBank.length===0){
-        alert("Chưa tải file Excel");
-        return;
-    }
-
-    const count=parseInt(document.getElementById("numQuestions").value);
-
-    examQuestions=shuffle([...questionBank]).slice(0,count);
-
-    const area=document.getElementById("examArea");
-
-    area.innerHTML="";
-
-    examQuestions.forEach((q,index)=>{
-
-        let html=`
-        <div class="question">
-        <h3>Câu ${index+1}: ${q["Nội dung"] || q["Noi dung"] || q["Question"] || ""}</h3>
-        `;
-
-        for(let i=1;i<=12;i++){
-
-            let ans=
-            q["Câu trả lời "+i] ||
-            q["Cau tra loi "+i] ||
-            q["Answer"+i];
-
-            if(ans){
-
-                html+=`
-                <div>
-                <label>
-                <input type="radio"
-                name="q${index}"
-                value="${i}">
-                ${ans}
-                </label>
-                </div>
-                `;
-            }
-        }
-
-        html+=`</div>`;
-
-        area.innerHTML+=html;
-
-    });
-
-    document.getElementById("result").innerHTML="";
-
-}
-
-function submitExam(){
-
-    let correct=0;
-
-    examQuestions.forEach((q,index)=>{
-
-        let selected=
-        document.querySelector(`input[name="q${index}"]:checked`);
-
-        let answer=
-        q["Đáp án"] ||
-        q["Dap an"] ||
-        q["Answer"];
-
-        if(selected){
-
-            if(selected.value.toString().trim() ==
-               answer.toString().trim()){
-
-                correct++;
-
-            }
-        }
-
-    });
-
-    let score=(correct/examQuestions.length*10).toFixed(2);
-
-    document.getElementById("result").innerHTML=
-    `
-    <div>
-    Điểm: ${score}/10
-    <br>
-    Đúng ${correct}/${examQuestions./div>
-    `;
-
-}
-
 </script>
 
 </body>
