@@ -1,284 +1,45 @@
-<!DOCTYPE html>
-<html lang="vi">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Thi thử trắc nghiệm</title>
-
-<style>
-body{
-    font-family:Arial,sans-serif;
-    background:#f4f6f9;
-    margin:0;
-    padding:20px;
-}
-.container{
-    max-width:1000px;
-    margin:auto;
-}
-.card{
-    background:#fff;
-    padding:20px;
-    border-radius:12px;
-    box-shadow:0 2px 10px rgba(0,0,0,.1);
-    margin-bottom:20px;
-}
-h1{
-    text-align:center;
-    color:#0b66d6;
-}
-button{
-    background:#0b66d6;
-    color:#fff;
-    border:none;
-    padding:10px 20px;
-    border-radius:8px;
-    cursor:pointer;
-}
-button:hover{
-    background:#0957b5;
-}
-.question{
-    margin-bottom:25px;
-    padding-bottom:15px;
-    border-bottom:1px solid #ddd;
-}
-.option{
-    display:block;
-    margin:8px 0;
-}
-.result{
-    font-size:22px;
-    font-weight:bold;
-    color:green;
-}
-</style>
-</head>
-
-<body>
-
-<div class="container">
-
-<div class="card">
-<h1>THI THỬ TRẮC NGHIỆM</h1>
-
-<label>Số câu:</label>
-
-<select id="questionCount">
-<option value="10">10</option>
-<option value="20">20</option>
-<option value="50" selected>50</option>
-<option value="100">100</option>
-</select>
-
-<button onclick="startExam()">Bắt đầu thi</button>
-
-</div>
-
-<div class="card">
-<div id="quiz"></div>
-
-<br>
-
-<button id="submitBtn"
-onclick="submitExam()"
-style="display:none;">
-Nộp bài
-</button>
-
-<div id="result"></div>
-
-</div>
-
-</div>
-
-<script>
-
-const CSV_URL =
-"https://docs.google.com/spreadsheets/d/e/2PACX-1vQO2SebFEqdyhX6gjvWYBB0aUyrAfwsOOok70MN57RdqN7Lrs8j5ZQ5hsoTaOAOKCk4nAKFCm75nH4N/pub?gid=124083215&single=true&output=csv";
-
-let currentExam = [];
-
-function shuffle(arr){
-    return [...arr].sort(()=>Math.random()-0.5);
-}
-
 async function loadQuestions(){
 
     const res = await fetch(CSV_URL);
     const txt = await res.text();
 
-    const lines = txt.split("\n");
+    const lines = txt.split(/\r?\n/);
 
     let questions = [];
 
-    for(let i=1;i<lines.length;i++){
+    for(let i=3;i<lines.length;i++){
 
-        let line = lines[i];
+        let row =
+        lines[i].match(/(".*?"|[^",]+)(?=\s*,|\s*$)/g);
 
-        if(!line.trim()) continue;
+        if(!row) continue;
 
-        if(line.includes("option1")) continue;
-
-        const matches =
-        line.match(/(".*?"|[^",]+)(?=\s*,|\s*$)/g);
-
-        if(!matches) continue;
-
-        const cols = matches.map(v =>
-            v.replace(/^"/,'')
-             .replace(/"$/,'')
-             .trim()
+        row = row.map(x =>
+          x.replace(/^"/,"")
+           .replace(/"$/,"")
+           .trim()
         );
 
-        const question =
-        cols.find(v =>
-            v.length > 30 &&
-            !v.startsWith("A.") &&
-            !v.startsWith("B.") &&
-            !v.startsWith("C.") &&
-            !v.startsWith("D.")
-        );
+        const question = row[4];
+        const answer = row[5];
 
-        const options =
-        cols.filter(v =>
-            v.startsWith("A.") ||
-            v.startsWith("B.") ||
-            v.startsWith("C.") ||
-            v.startsWith("D.")
-        );
+        const options = [];
 
-        let answer =
-        cols.find(v =>
-            ["1","2","3","4","A","B","C","D"]
-            .includes(v)
-        );
+        if(row[8]) options.push(row[8]);
+        if(row[9]) options.push(row[9]);
+        if(row[10]) options.push(row[10]);
+        if(row[11]) options.push(row[11]);
 
-        if(question && options.length >= 2){
+        if(question && options.length){
 
             questions.push({
                 question,
-                options,
-                answer
+                answer,
+                options
             });
+
         }
     }
 
     return questions;
 }
-
-async function startExam(){
-
-    const allQuestions =
-    await loadQuestions();
-
-    if(allQuestions.length===0){
-
-        alert(
-        "Không đọc được dữ liệu câu hỏi."
-        );
-
-        return;
-    }
-
-    const count =
-    parseInt(
-    document.getElementById(
-    "questionCount").value
-    );
-
-    currentExam =
-    shuffle(allQuestions)
-    .slice(0,count);
-
-    let html = "";
-
-    currentExam.forEach((q,index)=>{
-
-        html += `
-        <div class="question">
-
-        <h3>
-        Câu ${index+1}
-        </h3>
-
-        <p>${q.question}</p>
-        `;
-
-        q.options.forEach((op,i)=>{
-
-            html += `
-            <label class="option">
-            <input
-            type="radio"
-            name="q${index}"
-            value="${i+1}">
-            ${op}
-            </label>
-            `;
-        });
-
-        html += `</div>`;
-    });
-
-    document
-    .getElementById("quiz")
-    .innerHTML = html;
-
-    document
-    .getElementById("submitBtn")
-    .style.display = "inline-block";
-
-    document
-    .getElementById("result")
-    .innerHTML = "";
-}
-
-function submitExam(){
-
-    let score = 0;
-
-    currentExam.forEach((q,index)=>{
-
-        const selected =
-        document.querySelector(
-        'input[name="q'+index+'"]:checked'
-        );
-
-        if(!selected) return;
-
-        let user =
-        selected.value;
-
-        let answer =
-        q.answer;
-
-        const map = {
-            A:"1",
-            B:"2",
-            C:"3",
-            D:"4"
-        };
-
-        if(map[answer]){
-            answer = map[answer];
-        }
-
-        if(user===answer){
-            score++;
-        }
-
-    });
-
-    document
-    .getElementById("result")
-    .innerHTML =
-    `<div class="result">
-    Điểm: ${score}/${currentExam.length}
-    </div>`;
-}
-
-</script>
-
-</body>
-</html>
